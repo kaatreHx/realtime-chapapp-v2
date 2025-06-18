@@ -51,5 +51,5 @@ class LoginView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-def ChatDash(request, id, name, group):
-    return render(request, "app/chatdash.html", context = {'id': id, 'name': name, 'group': group})
+def ChatDash(request, id, name):
+    return render(request, "app/chatdash.html", context = {'id': id, 'name': name})

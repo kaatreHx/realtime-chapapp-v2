@@ -135,7 +135,7 @@
   <div class="chat-window">
     <div class="chat-header">
       Chat with {{name}}
-      Group {{group}}
+
     </div>
 
     <div class="chat-messages" id="messages">
@@ -149,7 +149,7 @@
   </div>
 </div>
 
-{{group|json_script:"group-name"}}
+{{name|json_script:"receiver-name"}}
 
 <script>
 
@@ -189,7 +189,7 @@
               const user = JSON.parse(localStorage.getItem('user'));
               console.log(user.name);
 
-                window.open(`/api/chat-page/${msg.id}/${msg.name}/${user.name}-${msg.name}/`, '_blank');
+                window.open(`/api/chat-page/${msg.id}/${msg.name}/`, '_blank');
             });
         });
     })
@@ -198,12 +198,12 @@
     });
 
     //Message backend
-    const groupName = JSON.parse(document.getElementById("group-name").textContent);
-    if (!groupName) {
+    const receiver = JSON.parse(document.getElementById("receiver-name").textContent);
+    console.log("Receiver name ..", receiver)
+    if (!receiver) {
       var ws = new WebSocket(`ws://127.0.0.1:8000/ws/as/?token=${accessToken}`);
     } else {
-      const groupNameEncoded = encodeURIComponent(groupName);
-      var ws = new WebSocket(`ws://127.0.0.1:8000/ws/as/${groupNameEncoded}/?token=${accessToken}`);
+      var ws = new WebSocket(`ws://127.0.0.1:8000/ws/as/${receiver}/?token=${accessToken}`);
     }
 
     ws.onopen = function(event){

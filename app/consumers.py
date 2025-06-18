@@ -15,9 +15,19 @@ class MyAsyncConsumer(AsyncConsumer):
         if user.is_authenticated:
             await self.set_user_online(user.id)
         
-        print(self.scope['url_route']['kwargs']['groupName'])
+        receiver = self.scope['url_route']['kwargs'].get('name')
+
+        if receiver is None:
+            print("Receiver name not provided in URL.")
+            # await self.close()
+            return
+
+        print("Receiver:", receiver)
+
+        self.group = self.get_group_name(user,receiver)
+        print(self.group)
         
-        self.channel_layer.group_add("come from param", self.channel_name)
+        self.channel_layer.group_add(self.group, self.channel_name)
 
         await self.send({
             'type': 'websocket.accept'
@@ -31,7 +41,7 @@ class MyAsyncConsumer(AsyncConsumer):
         if user.is_authenticated:
             await self.set_user_offline(user.id)
         
-        self.channel_layer.group_discard("come from param", self.channel_name)
+        self.channel_layer.group_discard(self.group, self.channel_name)
         raise StopConsumer()
 
     async def websocket_receive(self, event):
@@ -60,3 +70,7 @@ class MyAsyncConsumer(AsyncConsumer):
     @database_sync_to_async
     def set_user_offline(self, user_id):
         CustomUser.objects.filter(id=user_id).update(online_status=False)
+
+    def get_group_name(self, user, receiver):
+        names = sorted([user.name, receiver])
+        return f"chat_{names[0]}_{names[1]}"

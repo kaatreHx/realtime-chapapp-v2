@@ -35,7 +35,7 @@ class UserChat(models.Model):
     user_sender = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="sent_messages")
     user_receiver = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="received_messages")
     message = models.TextField()
-    groupName = models.CharField(max_length=50)
+    # groupName = models.CharField(max_length=50)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
