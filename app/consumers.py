@@ -15,7 +15,9 @@ class MyAsyncConsumer(AsyncConsumer):
         if user.is_authenticated:
             await self.set_user_online(user.id)
         
-        self.channel_layer.group_add('programmers', self.channel_name)
+        print(self.scope['url_route']['kwargs']['groupName'])
+        
+        self.channel_layer.group_add("come from param", self.channel_name)
 
         await self.send({
             'type': 'websocket.accept'
@@ -29,7 +31,7 @@ class MyAsyncConsumer(AsyncConsumer):
         if user.is_authenticated:
             await self.set_user_offline(user.id)
         
-        self.channel_layer.group_discard('programmers', self.channel_name)
+        self.channel_layer.group_discard("come from param", self.channel_name)
         raise StopConsumer()
 
     async def websocket_receive(self, event):

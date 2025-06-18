@@ -17,5 +17,5 @@ urlpatterns = [
     path('register-page/', TemplateView.as_view(template_name='app/register.html'), name='register-page'),
     path('login-page/', TemplateView.as_view(template_name='app/login.html'), name='login-page'),
     path('chat-page/', TemplateView.as_view(template_name='app/chatdash.html'), name='chat-page'),
-    path('chat-page/<int:id>/<str:name>/', ChatDash, name='chat-page-specific'),
+    path('chat-page/<int:id>/<str:name>/<str:group>/', ChatDash, name='chat-page-specific'),
 ]
