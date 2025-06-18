@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+</head>
+<body>
+  <h2>Login</h2>
+  <form id="login-form">
+    <label>Email:</label><br>
+    <input type="email" id="email" required><br>
+    <label>Password:</label><br>
+    <input type="password" id="password" required><br><br>
+    <button type="submit">Login</button>
+    <a href="/api/register-page/">Register</a>
+  </form>
+
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const response = await fetch('/api/login/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: document.getElementById('email').value,
+          password: document.getElementById('password').value
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        localStorage.setItem('user', data.user);
+        localStorage.setItem('access', data.access);
+        localStorage.setItem('refresh', data.refresh);
+        alert('Login successful!');
+        // Redirect if needed
+        window.location.href = '/api/chat-page/';
+      } else {
+        alert('Login failed: ' + (data.detail || 'Invalid credentials'));
+      }
+    });
+  </script>
+</body>
+</html>

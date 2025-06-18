@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Simple Chat Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+    }
+
+    .chat-container {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 250px;
+      background-color: #2c3e50;
+      color: white;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .sidebar h2 {
+      margin-bottom: 20px;
+    }
+
+    #chat-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    #chat-list li {
+      padding: 10px;
+      border-bottom: 1px solid #34495e;
+      cursor: pointer;
+    }
+
+    #chat-list li:hover {
+      background-color: #34495e;
+    }
+
+    .chat-window {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background-color: white;
+    }
+
+    .chat-header {
+      padding: 20px;
+      background-color: #3498db;
+      color: white;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .message {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      max-width: 60%;
+    }
+
+    .message.you {
+      background-color: #ecf0f1;
+      align-self: flex-start;
+    }
+
+    .message.me {
+      background-color: #d1f1d8;
+      align-self: flex-end;
+    }
+
+    .chat-input {
+      display: flex;
+      padding: 10px 20px;
+      border-top: 1px solid #ccc;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+
+    .chat-input button {
+      margin-left: 10px;
+      padding: 10px 20px;
+      border-radius: 20px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    {% comment %} .head {
+        margin-left: auto;
+        margin-right: auto;
+        width: 200px; /* or any width */
+      } {% endcomment %}
+  </style>
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="sidebar">
+    <button onclick="logout()" style="
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 20px;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    ">
+      Logout
+    </button>
+    <h2>Chats</h2>
+    <ul id="chat-list"></ul>
+  </div>
+
+  {% comment %} <h1 class="head">Mero Chat {{ id }}</h1> {% endcomment %}
+
+  <div class="chat-window">
+    <div class="chat-header">
+      Chat with {{name}}
+    </div>
+
+    <div class="chat-messages" id="messages">
+        {% comment %} Message Box {% endcomment %}
+    </div>
+
+    <div class="chat-input">
+      <input type="text" id="inputMessage" placeholder="Type your message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+    function logout() {
+      localStorage.removeItem('access'); // Remove token
+      localStorage.removeItem('refresh'); // Optional: remove refresh token
+      window.location.href = '/api/login-page/';  // Redirect to login page
+    }
+
+    const accessToken = localStorage.getItem('access');
+
+    fetch('/api/user-list/', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json', // Tell server we expect JSON
+        'Accept': 'application/json',       // Optional but good practice
+        'Authorization': `Bearer ${accessToken}`,
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json(); // Parse JSON response
+    })
+    .then(data => {
+        console.log(data)
+        const list = document.getElementById('chat-list');
+        data.forEach(msg => {
+        const li = document.createElement('li');
+            li.textContent = `${msg.name} - ${msg.online_status}`;
+            list.appendChild(li);
+
+            //New tab
+            li.addEventListener('click', () => {
+                window.open(`/api/chat-page/${msg.id}/${msg.name}/`, '_blank');
+            });
+        });
+    })
+    .catch(error => {
+      console.error('Fetch error:', error);
+    });
+
+    //Message backend
+    var ws = new WebSocket(`ws://127.0.0.1:8000/ws/as/?token=${accessToken}`)
+
+    ws.onopen = function(event){
+        console.log('WebSocket connected ...')
+    }
+
+    ws.onmessage = function(event){
+        console.log('Message from server ...', event.data)
+    }
+
+    ws.onclose = function(event){
+        console.log('WebSocket disconnected ...', event)
+    }
+    
+</script>
+
+</body>
+</html>

@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Env
+.env
+*.env
+venv/
+env/
+ENV/
+
+# Django
+*.log
+db.sqlite3
+media/
+staticfiles/
+*.pot
+*.pyc
+*.pyo
+*.pyd
+
+# VS Code & JetBrains IDEs
+.vscode/
+.idea/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Migrations (optional: keep if under version control)
+**/migrations/__pycache__/
+**/migrations/*.pyc
+**/migrations/*.pyo
+
+**/migrations/
+!**/migrations/__init__.py
+
+# Channels
+# No specific Channels files, just Redis if used via socket file
+*.redis
