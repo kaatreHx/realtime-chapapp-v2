@@ -1,7 +1,7 @@
 from django.urls import path
 from django.views.generic import TemplateView
 # from rest_framework import router
-from .views import RegisterView, LoginView, UserList, ChatDash
+from .views import RegisterView, LoginView, UserList, ChatDash, ChatHistory
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -18,4 +18,5 @@ urlpatterns = [
     path('login-page/', TemplateView.as_view(template_name='app/login.html'), name='login-page'),
     path('chat-page/', TemplateView.as_view(template_name='app/chatdash.html'), name='chat-page'),
     path('chat-page/<int:id>/<str:name>/', ChatDash, name='chat-page-specific'),
+    path('chat-history/<str:receiver_name>/', ChatHistory.as_view(), name='chat-history'),
 ]

@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
-from app.models import CustomUser
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, UserChatSerializer
+from app.models import CustomUser, UserChat
 from rest_framework.generics import ListAPIView
 from .models import CustomUser
 from django.db.models import Q
@@ -27,7 +27,23 @@ class UserList(ListAPIView):
 
     def get_queryset(self):
         return self.queryset.filter(~Q(id=self.request.user.id))
-    
+
+class ChatHistory(ListAPIView):
+    serializer_class = UserChatSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        receiver_name = self.kwargs.get('receiver_name')  # from URL
+        receiver = CustomUser.objects.filter(name=receiver_name).first()
+
+        if not receiver:
+            return UserChat.objects.none()
+
+        return UserChat.objects.filter(
+            Q(user_sender=self.request.user, user_receiver=receiver) |
+            Q(user_sender=receiver, user_receiver=self.request.user)
+        ).order_by('timestamp')
+        
 
 class LoginView(APIView):
     def post(self, request):
@@ -53,3 +69,4 @@ class LoginView(APIView):
 
 def ChatDash(request, id, name):
     return render(request, "app/chatdash.html", context = {'id': id, 'name': name})
+

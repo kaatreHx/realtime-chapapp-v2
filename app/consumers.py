@@ -1,11 +1,21 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import CustomUser
+from .models import CustomUser, UserChat
 import re
 import json
 
 
 class MyAsyncConsumer(AsyncWebsocketConsumer):
+
+    @database_sync_to_async
+    def save_chat(self, sender_name, receiver_name, message):
+        sender = CustomUser.objects.get(name=sender_name)
+        receiver = CustomUser.objects.get(name=receiver_name)
+        UserChat.objects.create(
+            user_sender=sender,
+            user_receiver=receiver,
+            message=message
+        )
 
     async def connect(self):
         print("WebSocket connected...")
@@ -53,13 +63,18 @@ class MyAsyncConsumer(AsyncWebsocketConsumer):
         # Assuming `event['message']` is a JSON string like '{"msg":"Hello"}'
         # Parse it to extract just the message text
         message_dict = json.loads(event['message'])  # extract "Hello"
+        # print("Real message ...", message_dict)
         actual_message = message_dict.get("msg", "")
+        print("Real message ...", actual_message)
+
+        await self.save_chat(event['user'], self.receiver, actual_message)
+
 
         # Format it as "manish: Hello"
         final_message = f"{event['user']}: {actual_message}"
 
         await self.send(text_data=final_message)
-
+    
 
     @database_sync_to_async
     def set_user_online(self, user_id):

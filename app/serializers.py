@@ -21,8 +21,10 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'email', 'name', 'online_status']
 
 class UserChatSerializer(serializers.ModelSerializer):
+    user_sender = serializers.StringRelatedField()
+    user_receiver = serializers.StringRelatedField()
+
     class Meta:
         model = UserChat
         fields = ['id', 'user_sender', 'user_receiver', 'message', 'timestamp']
-        read_only_fields = ['timestamp']
     

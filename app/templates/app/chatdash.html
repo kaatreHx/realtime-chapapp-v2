@@ -200,6 +200,48 @@
 
     //Message backend
     const receiver = JSON.parse(document.getElementById("receiver-name").textContent);
+
+
+    const messagesDiv = document.getElementById('messages');
+
+    fetch(`/api/chat-history/${receiver}/`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to fetch chat history');
+      }
+      return response.json();
+    })
+    .then(history => {
+      const currentUser = JSON.parse(localStorage.getItem('user')).name;
+
+      history.forEach(msg => {
+        const msgEl = document.createElement('div');
+        msgEl.classList.add('message');
+
+        // Style as 'me' or 'you'
+        if (msg.user_sender === currentUser) {
+          msgEl.classList.add('me');
+        } else {
+          msgEl.classList.add('you');
+        }
+
+        msgEl.textContent = `${msg.user_sender}: ${msg.message}`;
+        messagesDiv.appendChild(msgEl);
+      });
+
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    })
+    .catch(error => {
+      console.error('Chat history error:', error);
+    });
+
+
     console.log("Receiver name ..", receiver)
     if (!receiver) {
       var ws = new WebSocket(`ws://127.0.0.1:8000/ws/as/?token=${accessToken}`);
@@ -214,10 +256,18 @@
     ws.onmessage = function(event){
         console.log('Message from server:', event.data);
 
-        const messagesDiv = document.getElementById('messages');
+        const currentUser = JSON.parse(localStorage.getItem('user')).name;
+        const [sender, message] = event.data.split(':');
+      
         const messageElement = document.createElement('div');
-        messageElement.classList.add('message'); // You can conditionally add 'me'/'you'
-    
+        messageElement.classList.add('message');
+      
+        if (sender.trim() === currentUser) {
+          messageElement.classList.add('me');
+        } else {
+          messageElement.classList.add('you');
+        }
+      
         messageElement.textContent = event.data;
         messagesDiv.appendChild(messageElement);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;

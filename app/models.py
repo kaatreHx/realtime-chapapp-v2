@@ -29,7 +29,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['name']
 
     def __str__(self):
-        return self.email
+        return self.name
 
 class UserChat(models.Model):
     user_sender = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="sent_messages")
