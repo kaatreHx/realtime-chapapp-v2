@@ -1,67 +1,65 @@
-# from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.consumer import AsyncConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from .models import CustomUser
-from channels.exceptions import StopConsumer
+import re
+import json
 
 
-class MyAsyncConsumer(AsyncConsumer):
+class MyAsyncConsumer(AsyncWebsocketConsumer):
 
-    async def websocket_connect(self,event):
-        print("WebSocket connected...", event)
-        # print("User in scope:", self.scope['user'], self.scope['user'].is_authenticated)
-        user = self.scope['user']
-        print(user.name)
-        if user.is_authenticated:
-            await self.set_user_online(user.id)
-        
-        receiver = self.scope['url_route']['kwargs'].get('name')
+    async def connect(self):
+        print("WebSocket connected...")
 
-        if receiver is None:
+        self.user = self.scope['user']
+        print("User:", self.user.name)
+
+        if self.user.is_authenticated:
+            await self.set_user_online(self.user.id)
+
+        self.receiver = self.scope['url_route']['kwargs'].get('name')
+
+        if self.receiver is None:
             print("Receiver name not provided in URL.")
-            # await self.close()
-            return
+            self.receiver = "default"
 
-        print("Receiver:", receiver)
+        print("Receiver:", self.receiver)
 
-        self.group = self.get_group_name(user,receiver)
-        print(self.group)
-        
-        self.channel_layer.group_add(self.group, self.channel_name)
+        self.group = self.get_group_name(self.user, self.receiver)
+        print("Group:", self.group)
 
-        await self.send({
-            'type': 'websocket.accept'
+        await self.channel_layer.group_add(self.group, self.channel_name)
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        print("WebSocket disconnected...")
+
+        if self.user.is_authenticated:
+            await self.set_user_offline(self.user.id)
+
+        await self.channel_layer.group_discard(self.group, self.channel_name)
+
+    async def receive(self, text_data):
+        print("Message from client:", text_data)
+
+        await self.channel_layer.group_send(self.group, {
+            'type': 'chat_message',
+            'message': text_data,
+            'user': self.user.name
         })
 
-        # await self.close()
-
-    async def websocket_disconnect(self, event):
-        print("WebSocket disconnected...", event)
-        user = self.scope['user']
-        if user.is_authenticated:
-            await self.set_user_offline(user.id)
-        
-        self.channel_layer.group_discard(self.group, self.channel_name)
-        raise StopConsumer()
-
-    async def websocket_receive(self, event):
-        print("Message from client:", event)  
-        # await self.send(text_data = "Helloworld")
-        print('Actual Data .. ', event['message'])
-        print('Type of Actual Data .. ', type(event['message']))
-        await self.send({
-            'type': 'websocket.send',
-            'text': event['message']
-        })
-    
     async def chat_message(self, event):
-        print('Event .. ', event)
-        print('Actual Data .. ', event['message'])
-        print('Type of Actual Data .. ', type(event['message']))
-        await self.send({
-            'type': 'websocket.send',
-            'text': event['message']
-        })
+        print("Event:", event)
+
+        # Assuming `event['message']` is a JSON string like '{"msg":"Hello"}'
+        # Parse it to extract just the message text
+        message_dict = json.loads(event['message'])  # extract "Hello"
+        actual_message = message_dict.get("msg", "")
+
+        # Format it as "manish: Hello"
+        final_message = f"{event['user']}: {actual_message}"
+
+        await self.send(text_data=final_message)
+
 
     @database_sync_to_async
     def set_user_online(self, user_id):
@@ -73,4 +71,6 @@ class MyAsyncConsumer(AsyncConsumer):
 
     def get_group_name(self, user, receiver):
         names = sorted([user.name, receiver])
-        return f"chat_{names[0]}_{names[1]}"
+        raw = f"chat_{names[0]}_{names[1]}"
+        safe = re.sub(r'[^a-zA-Z0-9_.-]', '_', raw)
+        return safe[:100]

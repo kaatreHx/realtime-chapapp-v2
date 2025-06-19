@@ -139,8 +139,9 @@
     </div>
 
     <div class="chat-messages" id="messages">
-        {% comment %} Message Box {% endcomment %}
     </div>
+
+    
 
     <div class="chat-input">
       <input type="text" id="inputMessage" placeholder="Type your message..." />
@@ -181,7 +182,7 @@
         const list = document.getElementById('chat-list');
         data.forEach(msg => {
         const li = document.createElement('li');
-            li.textContent = `${msg.name} - ${msg.online_status}`;
+            li.textContent = `${msg.name} - ${msg.online_status == true ? 'Online': 'Offline'}`;
             list.appendChild(li);
 
             //New tab
@@ -211,12 +212,40 @@
     }
 
     ws.onmessage = function(event){
-        console.log('Message from server ...', event.data)
+        console.log('Message from server:', event.data);
+
+        const messagesDiv = document.getElementById('messages');
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message'); // You can conditionally add 'me'/'you'
+    
+        messageElement.textContent = event.data;
+        messagesDiv.appendChild(messageElement);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
     }
 
     ws.onclose = function(event){
         console.log('WebSocket disconnected ...', event)
     }
+
+    function sendMessage() {
+        const input = document.getElementById("inputMessage");
+        const message = input.value.trim();
+        console.log('Message .. ', message) 
+    
+        if (message === "") {
+            alert("Please enter a message.");
+            return;
+        }
+    
+        ws.send(JSON.stringify({
+          'msg': message
+          }));
+    
+        // Clear input
+        input.value = "";
+    }
+  
     
 </script>
 
